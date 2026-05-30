@@ -13,6 +13,14 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='emailotp',
             name='purpose',
-            field=models.CharField(choices=[('verification', 'Email Verification'), ('password_reset', 'Password Reset'), ('pin_reset', 'PIN Reset')], default='verification', max_length=20),
+            field=models.CharField(
+                choices=[
+                    ('verification', 'Email Verification'),
+                    ('password_reset', 'Password Reset'),
+                    ('pin_reset', 'PIN Reset'),
+                ],
+                default='verification',
+                max_length=20,
+            ),
         ),
     ]

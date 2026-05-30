@@ -9,7 +9,6 @@ import sys
 import shutil
 import subprocess
 import atexit
-import signal
 import time
 from django.core.management.commands.runserver import Command as BaseRunserverCommand
 from django.utils.termcolors import colorize
@@ -56,7 +55,8 @@ def _start_redis():
     if not redis_bin:
         print(colorize(
             "  [runserver] WARNING: redis-server not found — skipping Redis startup.\n"
-            "              Install Redis for Windows: https://github.com/tporadowski/redis/releases",
+            "              Install Redis for Windows: "
+            "https://github.com/tporadowski/redis/releases",
             fg="yellow"
         ))
         return None
@@ -86,7 +86,6 @@ def _start_redis():
     time.sleep(1.5)
     print(colorize("  [runserver] Redis started ✓", fg="green"))
     return proc
-
 
 
 def _start_celery():

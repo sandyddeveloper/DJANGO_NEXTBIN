@@ -1,8 +1,10 @@
 from django.db import models
 
+
 class RoleChoices(models.TextChoices):
     USER = 'USER', 'User'
     SUPER_ADMIN = 'SUPER_ADMIN', 'Super Admin'
+
 
 class OtpPurpose(models.TextChoices):
     VERIFICATION = 'verification', 'Email Verification'

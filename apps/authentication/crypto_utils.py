@@ -4,16 +4,19 @@ from cryptography.fernet import Fernet
 from django.conf import settings
 from django.db import models
 
+
 def get_fernet_key():
     # Derive a 32-byte key from settings.SECRET_KEY
     key_hash = hashlib.sha256(settings.SECRET_KEY.encode()).digest()
     return base64.urlsafe_b64encode(key_hash)
+
 
 def encrypt_value(value):
     if not value:
         return ""
     f = Fernet(get_fernet_key())
     return f.encrypt(value.encode()).decode()
+
 
 def decrypt_value(token):
     if not token:
@@ -24,11 +27,13 @@ def decrypt_value(token):
     except Exception:
         return ""
 
+
 def hash_value(value):
     if not value:
         return ""
     h = hashlib.sha256((value + settings.SECRET_KEY).encode())
     return h.hexdigest()
+
 
 def mask_email(email):
     if not email or '@' not in email:
@@ -41,6 +46,7 @@ def mask_email(email):
         masked_name = name[0] + '*'
     return f"{masked_name}@{domain}"
 
+
 def mask_mobile(mobile):
     if not mobile:
         return ""
@@ -48,11 +54,14 @@ def mask_mobile(mobile):
         return '*' * (len(mobile) - 4) + mobile[-4:]
     return '*' * len(mobile)
 
+
 def mask_password(password):
     return '********'
 
+
 def mask_pin(pin):
     return '******'
+
 
 class EncryptedTextField(models.TextField):
     """

@@ -17,11 +17,23 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='SystemSettings',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('key', models.CharField(help_text='Unique setting key, e.g. `SITE_NAME`.', max_length=255, unique=True)),
+                ('id', models.BigAutoField(
+                    auto_created=True, primary_key=True, serialize=False, verbose_name='ID'
+                )),
+                ('key', models.CharField(
+                    help_text='Unique setting key, e.g. `SITE_NAME`.',
+                    max_length=255,
+                    unique=True,
+                )),
                 ('value', models.TextField(help_text='Setting value.')),
-                ('description', models.TextField(blank=True, help_text='Human-readable explanation of the setting.')),
-                ('is_sensitive', models.BooleanField(default=False, help_text='Mark true for secrets; value will be masked for non-staff users.')),
+                ('description', models.TextField(
+                    blank=True,
+                    help_text='Human-readable explanation of the setting.',
+                )),
+                ('is_sensitive', models.BooleanField(
+                    default=False,
+                    help_text='Mark true for secrets; value will be masked for non-staff users.',
+                )),
                 ('updated_at', models.DateTimeField(auto_now=True)),
             ],
             options={
@@ -32,56 +44,169 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='SystemLog',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('level', models.CharField(choices=[('DEBUG', 'Debug'), ('INFO', 'Info'), ('WARNING', 'Warning'), ('ERROR', 'Error'), ('CRITICAL', 'Critical')], db_index=True, help_text='Severity level of the log entry.', max_length=10)),
-                ('source', models.CharField(db_index=True, help_text='Module or component that generated the entry, e.g. `celery.tasks` or `core.middleware`.', max_length=255)),
-                ('message', models.TextField(help_text='Short, human-readable description of the event.')),
-                ('details', models.JSONField(blank=True, default=dict, help_text='Optional structured payload with traceback, extra context, or metadata.')),
+                ('id', models.BigAutoField(
+                    auto_created=True, primary_key=True, serialize=False, verbose_name='ID'
+                )),
+                ('level', models.CharField(
+                    choices=[
+                        ('DEBUG', 'Debug'),
+                        ('INFO', 'Info'),
+                        ('WARNING', 'Warning'),
+                        ('ERROR', 'Error'),
+                        ('CRITICAL', 'Critical'),
+                    ],
+                    db_index=True,
+                    help_text='Severity level of the log entry.',
+                    max_length=10,
+                )),
+                ('source', models.CharField(
+                    db_index=True,
+                    help_text='Module or component that generated the entry, '
+                              'e.g. `celery.tasks` or `core.middleware`.',
+                    max_length=255,
+                )),
+                ('message', models.TextField(
+                    help_text='Short, human-readable description of the event.'
+                )),
+                ('details', models.JSONField(
+                    blank=True,
+                    default=dict,
+                    help_text='Optional structured payload with traceback, '
+                              'extra context, or metadata.',
+                )),
                 ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
             ],
             options={
                 'verbose_name': 'System Log',
                 'verbose_name_plural': 'System Logs',
                 'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['level', '-created_at'], name='core_system_level_556847_idx'), models.Index(fields=['source', '-created_at'], name='core_system_source_76df7a_idx')],
+                'indexes': [
+                    models.Index(
+                        fields=['level', '-created_at'],
+                        name='core_system_level_556847_idx',
+                    ),
+                    models.Index(
+                        fields=['source', '-created_at'],
+                        name='core_system_source_76df7a_idx',
+                    ),
+                ],
             },
         ),
         migrations.CreateModel(
             name='UserActivityLog',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.CharField(choices=[('login', 'Login'), ('logout', 'Logout'), ('password_change', 'Password Change'), ('profile_update', 'Profile Update'), ('settings_change', 'Settings Change'), ('data_export', 'Data Export'), ('other', 'Other')], db_index=True, help_text='Category of the user action.', max_length=50)),
-                ('description', models.TextField(blank=True, help_text='Human-readable description of what the user did.')),
-                ('ip_address', models.GenericIPAddressField(blank=True, help_text='Client IP address at the time of the action.', null=True)),
-                ('metadata', models.JSONField(blank=True, default=dict, help_text='Optional structured payload with additional context (e.g. changed fields).')),
+                ('id', models.BigAutoField(
+                    auto_created=True, primary_key=True, serialize=False, verbose_name='ID'
+                )),
+                ('action', models.CharField(
+                    choices=[
+                        ('login', 'Login'),
+                        ('logout', 'Logout'),
+                        ('password_change', 'Password Change'),
+                        ('profile_update', 'Profile Update'),
+                        ('settings_change', 'Settings Change'),
+                        ('data_export', 'Data Export'),
+                        ('other', 'Other'),
+                    ],
+                    db_index=True,
+                    help_text='Category of the user action.',
+                    max_length=50,
+                )),
+                ('description', models.TextField(
+                    blank=True,
+                    help_text='Human-readable description of what the user did.',
+                )),
+                ('ip_address', models.GenericIPAddressField(
+                    blank=True,
+                    help_text='Client IP address at the time of the action.',
+                    null=True,
+                )),
+                ('metadata', models.JSONField(
+                    blank=True,
+                    default=dict,
+                    help_text='Optional structured payload with additional context '
+                              '(e.g. changed fields).',
+                )),
                 ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('user', models.ForeignKey(help_text='The user who performed the action.', on_delete=django.db.models.deletion.CASCADE, related_name='activity_logs', to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(
+                    help_text='The user who performed the action.',
+                    on_delete=django.db.models.deletion.CASCADE,
+                    related_name='activity_logs',
+                    to=settings.AUTH_USER_MODEL,
+                )),
             ],
             options={
                 'verbose_name': 'User Activity Log',
                 'verbose_name_plural': 'User Activity Logs',
                 'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['user', '-created_at'], name='core_userac_user_id_96d8ad_idx'), models.Index(fields=['action', '-created_at'], name='core_userac_action_857cb9_idx')],
+                'indexes': [
+                    models.Index(
+                        fields=['user', '-created_at'],
+                        name='core_userac_user_id_96d8ad_idx',
+                    ),
+                    models.Index(
+                        fields=['action', '-created_at'],
+                        name='core_userac_action_857cb9_idx',
+                    ),
+                ],
             },
         ),
         migrations.CreateModel(
             name='APILog',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(
+                    auto_created=True, primary_key=True, serialize=False, verbose_name='ID'
+                )),
                 ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('is_active', models.BooleanField(db_index=True, default=True)),
                 ('endpoint', models.CharField(help_text='Request URL path.', max_length=255)),
-                ('method', models.CharField(choices=[('GET', 'GET'), ('POST', 'POST'), ('PUT', 'PUT'), ('PATCH', 'PATCH'), ('DELETE', 'DELETE')], help_text='HTTP method.', max_length=10)),
+                ('method', models.CharField(
+                    choices=[
+                        ('GET', 'GET'),
+                        ('POST', 'POST'),
+                        ('PUT', 'PUT'),
+                        ('PATCH', 'PATCH'),
+                        ('DELETE', 'DELETE'),
+                    ],
+                    help_text='HTTP method.',
+                    max_length=10,
+                )),
                 ('status_code', models.IntegerField(help_text='HTTP response status code.')),
-                ('response_time_ms', models.IntegerField(help_text='Response time in milliseconds.')),
-                ('ip_address', models.GenericIPAddressField(blank=True, help_text='Client IP address (IPv4 or IPv6).', null=True)),
-                ('user', models.ForeignKey(blank=True, help_text='Authenticated user who made the request, if any.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='api_logs', to=settings.AUTH_USER_MODEL)),
+                ('response_time_ms', models.IntegerField(
+                    help_text='Response time in milliseconds.'
+                )),
+                ('ip_address', models.GenericIPAddressField(
+                    blank=True,
+                    help_text='Client IP address (IPv4 or IPv6).',
+                    null=True,
+                )),
+                ('user', models.ForeignKey(
+                    blank=True,
+                    help_text='Authenticated user who made the request, if any.',
+                    null=True,
+                    on_delete=django.db.models.deletion.SET_NULL,
+                    related_name='api_logs',
+                    to=settings.AUTH_USER_MODEL,
+                )),
             ],
             options={
                 'verbose_name': 'API Log',
                 'verbose_name_plural': 'API Logs',
-                'indexes': [models.Index(fields=['endpoint', '-created_at'], name='core_apilog_endpoin_10345c_idx'), models.Index(fields=['method', '-created_at'], name='core_apilog_method_2d35eb_idx'), models.Index(fields=['status_code'], name='core_apilog_status__093590_idx')],
+                'indexes': [
+                    models.Index(
+                        fields=['endpoint', '-created_at'],
+                        name='core_apilog_endpoin_10345c_idx',
+                    ),
+                    models.Index(
+                        fields=['method', '-created_at'],
+                        name='core_apilog_method_2d35eb_idx',
+                    ),
+                    models.Index(
+                        fields=['status_code'],
+                        name='core_apilog_status__093590_idx',
+                    ),
+                ],
             },
         ),
     ]

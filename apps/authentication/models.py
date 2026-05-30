@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
-from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
 from apps.constants.authConstant import RoleChoices, OtpPurpose
 from apps.authentication.crypto_utils import (
@@ -37,33 +36,35 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=150)
     middle_name = models.CharField(max_length=150, blank=True, null=True)
     last_name = models.CharField(max_length=150, blank=True, null=True)
-    
+
     # Encrypted, hashed, and masked fields
     email = EncryptedTextField(default="")
     email_hashed = models.CharField(unique=True, max_length=64, db_index=True, default="")
     email_masked = models.CharField(max_length=255, default="")
-    
+
     mobile = EncryptedTextField(blank=True, null=True)
-    mobile_hashed = models.CharField(unique=True, max_length=64, blank=True, null=True, db_index=True)
+    mobile_hashed = models.CharField(
+        unique=True, max_length=64, blank=True, null=True, db_index=True
+    )
     mobile_masked = models.CharField(max_length=255, blank=True, null=True)
-    
+
     profile_image = models.ImageField(upload_to='profile_images/', blank=True, null=True)
-    
+
     password = EncryptedTextField(default="")
     password_hashed = models.CharField(max_length=128, default="")
     password_masked = models.CharField(max_length=255, default="")
-    
+
     pin = EncryptedTextField(blank=True, null=True)
     pin_hashed = models.CharField(max_length=128, blank=True, null=True)
     pin_masked = models.CharField(max_length=255, blank=True, null=True)
-    
+
     role = models.CharField(max_length=20, choices=RoleChoices.choices, default=RoleChoices.USER)
-    
+
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -77,18 +78,18 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         if self.email:
             self.email_hashed = hash_value(self.email)
             self.email_masked = mask_email(self.email)
-            
+
         if self.mobile:
             self.mobile_hashed = hash_value(self.mobile)
             self.mobile_masked = mask_mobile(self.mobile)
         else:
             self.mobile_hashed = None
             self.mobile_masked = None
-            
+
         if self.password:
             self.password_hashed = hash_value(self.password)
             self.password_masked = mask_password(self.password)
-            
+
         if self.pin:
             self.pin_hashed = hash_value(self.pin)
             self.pin_masked = mask_pin(self.pin)
@@ -98,7 +99,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
         if not self.profile_code:
             prefix = 'NBS' if self.role == RoleChoices.SUPER_ADMIN else 'NBU'
-            last_user = CustomUser.objects.filter(profile_code__startswith=prefix).order_by('-profile_code').first()
+            last_user = CustomUser.objects.filter(
+                profile_code__startswith=prefix
+            ).order_by('-profile_code').first()
             if not last_user:
                 self.profile_code = f"{prefix}00001"
             else:

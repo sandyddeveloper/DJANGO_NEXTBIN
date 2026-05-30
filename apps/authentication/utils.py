@@ -11,12 +11,12 @@ def generate_tokens(user):
     Claims are customized with user roles and profile codes.
     """
     now = datetime.datetime.utcnow()
-    
+
     # 1 hour expiration for access token
     access_expiry = now + datetime.timedelta(hours=1)
     # 7 days expiration for refresh token
     refresh_expiry = now + datetime.timedelta(days=7)
-    
+
     access_payload = {
         'user_id': user.profile_code,
         'email': user.email,
@@ -26,23 +26,23 @@ def generate_tokens(user):
         'iat': now,
         'token_type': 'access'
     }
-    
+
     refresh_payload = {
         'user_id': user.profile_code,
         'exp': refresh_expiry,
         'iat': now,
         'token_type': 'refresh'
     }
-    
+
     access_token = jwt.encode(access_payload, settings.SECRET_KEY, algorithm='HS256')
     refresh_token = jwt.encode(refresh_payload, settings.SECRET_KEY, algorithm='HS256')
-    
+
     # Ensure standard string format
     if isinstance(access_token, bytes):
         access_token = access_token.decode('utf-8')
     if isinstance(refresh_token, bytes):
         refresh_token = refresh_token.decode('utf-8')
-        
+
     return access_token, refresh_token
 
 
@@ -75,7 +75,7 @@ def send_otp_email(email, otp):
         f"Best regards,\n"
         f"Nextbin Security Team"
     )
-    
+
     # Send email using config settings
     return send_mail(
         subject=subject,
