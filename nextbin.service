@@ -1,0 +1,29 @@
+"""
+Systemd service file for production deployment.
+Save as /etc/systemd/system/nextbin.service
+"""
+
+[Unit]
+Description=Nextbin Django Application
+After=network.target postgresql.service redis.service
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/nextbin
+Environment="PATH=/var/www/nextbin/venv/bin"
+ExecStart=/var/www/nextbin/venv/bin/gunicorn \
+    --workers 4 \
+    --worker-class sync \
+    --bind unix:/run/nextbin.sock \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile - \
+    config.wsgi:application
+
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

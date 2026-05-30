@@ -1,0 +1,25 @@
+"""
+Celery service file for production deployment.
+Save as /etc/systemd/system/nextbin-celery.service
+"""
+
+[Unit]
+Description=Nextbin Celery Worker
+After=network.target postgresql.service redis.service
+
+[Service]
+Type=forking
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/nextbin
+Environment="PATH=/var/www/nextbin/venv/bin"
+ExecStart=/var/www/nextbin/venv/bin/celery -A config worker \
+    --loglevel=info \
+    --logfile=/var/log/nextbin/celery.log \
+    --pidfile=/var/run/celery.pid
+
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
