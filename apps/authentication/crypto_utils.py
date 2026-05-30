@@ -1,5 +1,6 @@
 import base64
 import hashlib
+
 from cryptography.fernet import Fernet
 from django.conf import settings
 from django.db import models
@@ -36,14 +37,14 @@ def hash_value(value):
 
 
 def mask_email(email):
-    if not email or '@' not in email:
+    if not email or "@" not in email:
         return email
-    parts = email.split('@')
+    parts = email.split("@")
     name, domain = parts[0], parts[1]
     if len(name) > 2:
-        masked_name = name[:2] + '*' * (len(name) - 2)
+        masked_name = name[:2] + "*" * (len(name) - 2)
     else:
-        masked_name = name[0] + '*'
+        masked_name = name[0] + "*"
     return f"{masked_name}@{domain}"
 
 
@@ -51,16 +52,16 @@ def mask_mobile(mobile):
     if not mobile:
         return ""
     if len(mobile) > 4:
-        return '*' * (len(mobile) - 4) + mobile[-4:]
-    return '*' * len(mobile)
+        return "*" * (len(mobile) - 4) + mobile[-4:]
+    return "*" * len(mobile)
 
 
 def mask_password(password):
-    return '********'
+    return "********"
 
 
 def mask_pin(pin):
-    return '******'
+    return "******"
 
 
 class EncryptedTextField(models.TextField):
@@ -68,11 +69,12 @@ class EncryptedTextField(models.TextField):
     A custom Django field that encrypts text values on database write
     and decrypts them transparently on database read.
     """
+
     def get_prep_value(self, value):
         prep_value = super().get_prep_value(value)
         if prep_value:
             # Avoid double encryption if it's already a Fernet token
-            if str(prep_value).startswith('gAAAAA'):
+            if str(prep_value).startswith("gAAAAA"):
                 return prep_value
             return encrypt_value(str(prep_value))
         return prep_value
@@ -80,7 +82,7 @@ class EncryptedTextField(models.TextField):
     def from_db_value(self, value, expression, connection):
         if value:
             # If it starts with Fernet prefix, decrypt it
-            if str(value).startswith('gAAAAA'):
+            if str(value).startswith("gAAAAA"):
                 return decrypt_value(value)
             return value
         return value

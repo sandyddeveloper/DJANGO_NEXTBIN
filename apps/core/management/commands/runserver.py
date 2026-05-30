@@ -4,15 +4,15 @@ Extends Django's runserver to also start Redis and Celery in the background.
 All services are shut down cleanly when the server is stopped (CTRL+C).
 """
 
+import atexit
 import os
-import sys
 import shutil
 import subprocess
-import atexit
+import sys
 import time
+
 from django.core.management.commands.runserver import Command as BaseRunserverCommand
 from django.utils.termcolors import colorize
-
 
 # Track background processes so we can kill them on exit
 _background_procs = []
@@ -53,12 +53,14 @@ def _start_redis():
                 break
 
     if not redis_bin:
-        print(colorize(
-            "  [runserver] WARNING: redis-server not found — skipping Redis startup.\n"
-            "              Install Redis for Windows: "
-            "https://github.com/tporadowski/redis/releases",
-            fg="yellow"
-        ))
+        print(
+            colorize(
+                "  [runserver] WARNING: redis-server not found — skipping Redis startup.\n"
+                "              Install Redis for Windows: "
+                "https://github.com/tporadowski/redis/releases",
+                fg="yellow",
+            )
+        )
         return None
 
     # Check if Redis is already responding
@@ -67,10 +69,7 @@ def _start_redis():
     ]
     for redis_cli in redis_cli_paths:
         if redis_cli and os.path.isfile(redis_cli):
-            result = subprocess.run(
-                [redis_cli, "ping"],
-                capture_output=True, text=True, timeout=2
-            )
+            result = subprocess.run([redis_cli, "ping"], capture_output=True, text=True, timeout=2)
             if result.stdout.strip() == "PONG":
                 print(colorize("  [runserver] Redis is already running ✓", fg="green"))
                 return None
@@ -94,23 +93,31 @@ def _start_celery():
 
     # Fallback: look inside the venv
     if not celery_bin:
-        venv_celery = os.path.join(
-            os.path.dirname(sys.executable), "celery"
-        )
+        venv_celery = os.path.join(os.path.dirname(sys.executable), "celery")
         if os.path.exists(venv_celery):
             celery_bin = venv_celery
 
     if not celery_bin:
-        print(colorize(
-            "  [runserver] WARNING: celery not found — skipping Celery startup.",
-            fg="yellow"
-        ))
+        print(
+            colorize(
+                "  [runserver] WARNING: celery not found — skipping Celery startup.",
+                fg="yellow",
+            )
+        )
         return None
 
     print(colorize("  [runserver] Starting Celery worker...", fg="cyan"))
     proc = subprocess.Popen(
-        [celery_bin, "-A", "config", "worker", "--loglevel=info",
-         "--concurrency=2", "-n", "worker@%h"],
+        [
+            celery_bin,
+            "-A",
+            "config",
+            "worker",
+            "--loglevel=info",
+            "--concurrency=2",
+            "-n",
+            "worker@%h",
+        ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
@@ -120,9 +127,7 @@ def _start_celery():
 
 
 class Command(BaseRunserverCommand):
-    help = (
-        "Start Django development server along with Redis and Celery worker."
-    )
+    help = "Start Django development server along with Redis and Celery worker."
 
     def handle(self, *args, **options):
         print(colorize("\n🚀 Nextbin Dev Server — starting all services\n", fg="magenta"))

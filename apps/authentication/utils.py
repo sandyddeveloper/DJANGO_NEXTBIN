@@ -1,6 +1,7 @@
-import jwt
 import datetime
 import random
+
+import jwt
 from django.conf import settings
 from django.core.mail import send_mail
 
@@ -18,30 +19,30 @@ def generate_tokens(user):
     refresh_expiry = now + datetime.timedelta(days=7)
 
     access_payload = {
-        'user_id': user.profile_code,
-        'email': user.email,
-        'active_role': user.role,
-        'active_profile_code': user.profile_code,
-        'exp': access_expiry,
-        'iat': now,
-        'token_type': 'access'
+        "user_id": user.profile_code,
+        "email": user.email,
+        "active_role": user.role,
+        "active_profile_code": user.profile_code,
+        "exp": access_expiry,
+        "iat": now,
+        "token_type": "access",
     }
 
     refresh_payload = {
-        'user_id': user.profile_code,
-        'exp': refresh_expiry,
-        'iat': now,
-        'token_type': 'refresh'
+        "user_id": user.profile_code,
+        "exp": refresh_expiry,
+        "iat": now,
+        "token_type": "refresh",
     }
 
-    access_token = jwt.encode(access_payload, settings.SECRET_KEY, algorithm='HS256')
-    refresh_token = jwt.encode(refresh_payload, settings.SECRET_KEY, algorithm='HS256')
+    access_token = jwt.encode(access_payload, settings.SECRET_KEY, algorithm="HS256")
+    refresh_token = jwt.encode(refresh_payload, settings.SECRET_KEY, algorithm="HS256")
 
     # Ensure standard string format
     if isinstance(access_token, bytes):
-        access_token = access_token.decode('utf-8')
+        access_token = access_token.decode("utf-8")
     if isinstance(refresh_token, bytes):
-        refresh_token = refresh_token.decode('utf-8')
+        refresh_token = refresh_token.decode("utf-8")
 
     return access_token, refresh_token
 
@@ -51,7 +52,7 @@ def decode_token(token):
     Decodes and validates the signature and expiration of a JWT token.
     Returns the decoded payload if valid, otherwise raises exception.
     """
-    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
     return payload
 
 
