@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+
 from apps.authentication.models import EmailOTP
 from apps.constants.authConstant import OtpPurpose, RoleChoices
 
