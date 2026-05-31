@@ -1,79 +1,78 @@
 from django.urls import path
-from api.v1.users.views import (
-    SignupView,
-    VerifyOTPView,
-    ResendOTPView,
-    ForgotPasswordView,
-    ResetPasswordView,
-    ForgotPinView,
-    ResetPinView,
-    LoginView,
-    TokenRefreshView,
-    UserProfileView,
-    UserProfileViewSet,
+
+from api.v1.admin.views import (
+    PermissionDetailView,
+    PermissionListView,
+    RoleDetailView,
+    RoleListView,
+    RolePermissionsView,
+    StaffAssignRoleView,
+    StaffDetailView,
+    StaffListView,
 )
 from api.v1.core.views import (
+    APILogDetailView,
+    APILogListView,
     HealthCheckView,
-    APILogViewSet,
-    UserActivityLogViewSet,
-    SystemLogViewSet,
-    SystemSettingsViewSet,
+    SystemLogDetailView,
+    SystemLogListView,
+    SystemSettingsDetailView,
+    SystemSettingsListView,
+    UserActivityLogDetailView,
+    UserActivityLogListView,
+)
+from api.v1.users.views import (
+    ForgotPasswordOrPinView,
+    LoginView,
+    ResendOTPView,
+    ResetPasswordOrPinView,
+    SignupView,
+    TokenRefreshView,
+    UserProfileDetailView,
+    UserProfileListView,
+    UserProfileView,
+    VerifyOTPView,
 )
 
-app_name = 'v1'
-
-# Viewsets setup for logs (list/retrieve) and settings (full CRUD)
-api_log_list   = APILogViewSet.as_view({'get': 'list'})
-api_log_detail = APILogViewSet.as_view({'get': 'retrieve'})
-
-user_activity_log_list   = UserActivityLogViewSet.as_view({'get': 'list'})
-user_activity_log_detail = UserActivityLogViewSet.as_view({'get': 'retrieve'})
-
-system_log_list   = SystemLogViewSet.as_view({'get': 'list'})
-system_log_detail = SystemLogViewSet.as_view({'get': 'retrieve'})
-
-settings_list   = SystemSettingsViewSet.as_view({'get': 'list', 'post': 'create'})
-settings_detail = SystemSettingsViewSet.as_view({
-    'get':    'retrieve',
-    'put':    'update',
-    'patch':  'partial_update',
-    'delete': 'destroy',
-})
-
-profiles_list = UserProfileViewSet.as_view({
-    'get': 'list',
-    'post': 'create'
-})
-profiles_detail = UserProfileViewSet.as_view({
-    'get': 'retrieve',
-    'put': 'update',
-    'patch': 'partial_update',
-    'delete': 'destroy'
-})
+app_name = "v1"
 
 urlpatterns = [
     # User / Authentication ----------------------------------------------------
-    path('user/signup/', SignupView.as_view(), name='signup'),
-    path('user/verify-otp/', VerifyOTPView.as_view(), name='verify-otp'),
-    path('user/resend-otp/', ResendOTPView.as_view(), name='resend-otp'),
-    path('user/forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
-    path('user/reset-password/', ResetPasswordView.as_view(), name='reset-password'),
-    path('user/forgot-pin/', ForgotPinView.as_view(), name='forgot-pin'),
-    path('user/reset-pin/', ResetPinView.as_view(), name='reset-pin'),
-    path('user/login/', LoginView.as_view(), name='login'),
-    path('user/token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
-    path('user/me/', UserProfileView.as_view(), name='me'),
-    path('user/profiles/', profiles_list, name='user-profile-list'),
-    path('user/profiles/<str:pk>/', profiles_detail, name='user-profile-detail'),
+    path("user/signup/", SignupView.as_view(), name="signup"),
+    path("user/verify-otp/", VerifyOTPView.as_view(), name="verify-otp"),
+    path("user/resend-otp/", ResendOTPView.as_view(), name="resend-otp"),
+    path("user/forgot-password/", ForgotPasswordOrPinView.as_view(credential_type="password"), name="forgot-password"),
+    path("user/reset-password/", ResetPasswordOrPinView.as_view(credential_type="password"), name="reset-password"),
+    path("user/forgot-pin/", ForgotPasswordOrPinView.as_view(credential_type="pin"), name="forgot-pin"),
+    path("user/reset-pin/", ResetPasswordOrPinView.as_view(credential_type="pin"), name="reset-pin"),
+    path("user/login/", LoginView.as_view(), name="login"),
+    path("user/token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
+    path("user/me/", UserProfileView.as_view(), name="me"),
+    
+    # User Profile CRUD --------------------------------------------------------
+    path("user/profiles/", UserProfileListView.as_view(), name="user-profile-list"),
+    path("user/profiles/<str:pk>/", UserProfileDetailView.as_view(), name="user-profile-detail"),
 
     # Core / System & Logs -----------------------------------------------------
-    path('core/health/', HealthCheckView.as_view(), name='health-check'),
-    path('core/logs/api/',          api_log_list,   name='api-log-list'),
-    path('core/logs/api/<int:pk>/', api_log_detail, name='api-log-detail'),
-    path('core/logs/user-activity/',          user_activity_log_list,   name='user-activity-log-list'),
-    path('core/logs/user-activity/<int:pk>/', user_activity_log_detail, name='user-activity-log-detail'),
-    path('core/logs/system/',          system_log_list,   name='system-log-list'),
-    path('core/logs/system/<int:pk>/', system_log_detail, name='system-log-detail'),
-    path('core/settings/',          settings_list,   name='system-setting-list'),
-    path('core/settings/<int:pk>/', settings_detail, name='system-setting-detail'),
+    path("core/health/", HealthCheckView.as_view(), name="health-check"),
+    path("core/logs/api/", APILogListView.as_view(), name="api-log-list"),
+    path("core/logs/api/<int:pk>/", APILogDetailView.as_view(), name="api-log-detail"),
+    path("core/logs/user-activity/", UserActivityLogListView.as_view(), name="user-activity-log-list"),
+    path("core/logs/user-activity/<int:pk>/", UserActivityLogDetailView.as_view(), name="user-activity-log-detail"),
+    path("core/logs/system/", SystemLogListView.as_view(), name="system-log-list"),
+    path("core/logs/system/<int:pk>/", SystemLogDetailView.as_view(), name="system-log-detail"),
+    path("core/settings/", SystemSettingsListView.as_view(), name="system-setting-list"),
+    path("core/settings/<int:pk>/", SystemSettingsDetailView.as_view(), name="system-setting-detail"),
+
+    # Admin / RBAC & Staff -----------------------------------------------------
+    path("admin/permissions/", PermissionListView.as_view(), name="admin-permission-list"),
+    path("admin/permissions/<int:pk>/", PermissionDetailView.as_view(), name="admin-permission-detail"),
+    path("admin/roles/", RoleListView.as_view(), name="admin-role-list"),
+    path("admin/roles/<int:pk>/", RoleDetailView.as_view(), name="admin-role-detail"),
+    path("admin/roles/<int:pk>/assign-permissions/", RolePermissionsView.as_view(action="assign"), name="admin-role-assign-permissions"),
+    path("admin/roles/<int:pk>/remove-permissions/", RolePermissionsView.as_view(action="remove"), name="admin-role-remove-permissions"),
+    path("admin/staff/", StaffListView.as_view(), name="admin-staff-list"),
+    path("admin/staff/<str:pk>/", StaffDetailView.as_view(), name="admin-staff-detail"),
+    path("admin/staff/<str:pk>/assign-role/", StaffAssignRoleView.as_view(), name="admin-staff-assign-role"),
+    path("admin/staff/<str:pk>/deactivate/", StaffDetailView.as_view(), name="admin-staff-deactivate"),
 ]
