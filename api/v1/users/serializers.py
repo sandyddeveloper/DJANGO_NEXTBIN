@@ -1,32 +1,40 @@
 import jwt
-from rest_framework import serializers
-from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from rest_framework import serializers
+
+from apps.authentication.crypto_utils import hash_value
 from apps.authentication.models import EmailOTP
 from apps.constants.authConstant import OtpPurpose, RoleChoices
-from apps.authentication.crypto_utils import hash_value
 
 User = get_user_model()
 
 
 class SignupSerializer(serializers.ModelSerializer):
     """Serializer for registering a new user."""
+
     password = serializers.CharField(write_only=True, min_length=8)
     pin = serializers.CharField(write_only=True, min_length=6, max_length=6)
 
     class Meta:
         model = User
         fields = [
-            'first_name', 'middle_name', 'last_name',
-            'email', 'mobile', 'profile_image',
-            'password', 'pin', 'role'
+            "first_name",
+            "middle_name",
+            "last_name",
+            "email",
+            "mobile",
+            "profile_image",
+            "password",
+            "pin",
+            "role",
         ]
         extra_kwargs = {
-            'middle_name': {'required': False},
-            'last_name': {'required': False},
-            'mobile': {'required': False},
-            'profile_image': {'required': False},
-            'role': {'required': False},
+            "middle_name": {"required": False},
+            "last_name": {"required": False},
+            "mobile": {"required": False},
+            "profile_image": {"required": False},
+            "role": {"required": False},
         }
 
     def validate_email(self, value):
@@ -45,13 +53,13 @@ class SignupSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
-        pin = validated_data.pop('pin')
-        
+        password = validated_data.pop("password")
+        pin = validated_data.pop("pin")
+
         user = User(**validated_data)
         user.set_password(password)
         user.set_pin(pin)
-        
+
         # User starts out as unverified until email OTP confirmation
         user.is_verified = False
         user.is_active = False
@@ -61,12 +69,13 @@ class SignupSerializer(serializers.ModelSerializer):
 
 class OTPVerifySerializer(serializers.Serializer):
     """Serializer for verifying the email OTP."""
+
     email = serializers.EmailField()
     otp = serializers.CharField(min_length=6, max_length=6)
 
     def validate(self, attrs):
-        email = attrs.get('email')
-        otp = attrs.get('otp')
+        email = attrs.get("email")
+        otp = attrs.get("otp")
 
         try:
             otp_record = EmailOTP.objects.get(email=email, otp=otp, purpose=OtpPurpose.VERIFICATION)
@@ -77,22 +86,23 @@ class OTPVerifySerializer(serializers.Serializer):
             otp_record.delete()
             raise serializers.ValidationError("This OTP has expired. Please request a new one.")
 
-        attrs['otp_record'] = otp_record
+        attrs["otp_record"] = otp_record
         return attrs
 
 
 class LoginSerializer(serializers.Serializer):
     """Serializer for logging in with either password or PIN."""
+
     email = serializers.EmailField(required=False)
     mobile = serializers.CharField(required=False)
     password = serializers.CharField(required=False, write_only=True)
     pin = serializers.CharField(required=False, write_only=True, min_length=6, max_length=6)
 
     def validate(self, attrs):
-        email = attrs.get('email')
-        mobile = attrs.get('mobile')
-        password = attrs.get('password')
-        pin = attrs.get('pin')
+        email = attrs.get("email")
+        mobile = attrs.get("mobile")
+        password = attrs.get("password")
+        pin = attrs.get("pin")
 
         # Check identification (email or mobile)
         if not email and not mobile:
@@ -117,7 +127,9 @@ class LoginSerializer(serializers.Serializer):
 
         # Validate verified and active status
         if user and not user.is_verified:
-            raise serializers.ValidationError("Account email is not verified. Please verify your email first.")
+            raise serializers.ValidationError(
+                "Account email is not verified. Please verify your email first."
+            )
         if user and not user.is_active:
             raise serializers.ValidationError("Account is deactivated.")
 
@@ -129,27 +141,28 @@ class LoginSerializer(serializers.Serializer):
             if not user.check_pin(pin):
                 raise serializers.ValidationError("Incorrect PIN.")
 
-        attrs['user'] = user
+        attrs["user"] = user
         return attrs
 
 
 class TokenRefreshSerializer(serializers.Serializer):
     """Serializer for obtaining a new access token from a refresh token."""
+
     refresh = serializers.CharField()
 
     def validate(self, attrs):
-        refresh_token = attrs.get('refresh')
+        refresh_token = attrs.get("refresh")
         try:
-            payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=['HS256'])
+            payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=["HS256"])
         except jwt.ExpiredSignatureError:
             raise serializers.ValidationError("Refresh token has expired.")
         except jwt.InvalidTokenError:
             raise serializers.ValidationError("Invalid refresh token.")
 
-        if payload.get('token_type') != 'refresh':
+        if payload.get("token_type") != "refresh":
             raise serializers.ValidationError("Invalid token type. Refresh token required.")
 
-        user_id = payload.get('user_id')
+        user_id = payload.get("user_id")
         try:
             user = User.objects.get(profile_code=user_id)
         except User.DoesNotExist:
@@ -158,28 +171,41 @@ class TokenRefreshSerializer(serializers.Serializer):
         if not user.is_active:
             raise serializers.ValidationError("User account is deactivated.")
 
-        attrs['user'] = user
+        attrs["user"] = user
         return attrs
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
     """Serializer for retrieving user details."""
-    role_display = serializers.CharField(source='get_role_display', read_only=True)
+
+    role_display = serializers.CharField(source="get_role_display", read_only=True)
 
     class Meta:
         model = User
         fields = [
-            'profile_code', 'first_name', 'middle_name', 'last_name',
-            'email', 'email_masked', 'email_hashed',
-            'mobile', 'mobile_masked', 'mobile_hashed',
-            'profile_image', 'role', 'role_display', 
-            'is_verified', 'is_active', 'created_at'
+            "profile_code",
+            "first_name",
+            "middle_name",
+            "last_name",
+            "email",
+            "email_masked",
+            "email_hashed",
+            "mobile",
+            "mobile_masked",
+            "mobile_hashed",
+            "profile_image",
+            "role",
+            "role_display",
+            "is_verified",
+            "is_active",
+            "created_at",
         ]
         read_only_fields = fields
 
 
 class ResendOTPSerializer(serializers.Serializer):
     """Serializer for resending the verification OTP."""
+
     email = serializers.EmailField()
 
     def validate_email(self, value):
@@ -196,36 +222,42 @@ class ResendOTPSerializer(serializers.Serializer):
 
 class ForgotPasswordSerializer(serializers.Serializer):
     """Serializer for requesting a password reset OTP."""
+
     profile_code = serializers.CharField()
 
     def validate(self, attrs):
-        profile_code = attrs.get('profile_code')
+        profile_code = attrs.get("profile_code")
         try:
             user = User.objects.get(profile_code=profile_code)
         except User.DoesNotExist:
-            raise serializers.ValidationError({"profile_code": "User with this profile code does not exist."})
+            raise serializers.ValidationError(
+                {"profile_code": "User with this profile code does not exist."}
+            )
 
         if not user.is_verified:
             raise serializers.ValidationError({"profile_code": "User email is not verified yet."})
 
-        attrs['user'] = user
+        attrs["user"] = user
         return attrs
 
 
 class ResetPasswordSerializer(serializers.Serializer):
     """Serializer for resetting password with an OTP."""
+
     profile_code = serializers.CharField()
     otp = serializers.CharField(min_length=6, max_length=6)
     new_password = serializers.CharField(write_only=True, min_length=8)
 
     def validate(self, attrs):
-        profile_code = attrs.get('profile_code')
-        otp = attrs.get('otp')
+        profile_code = attrs.get("profile_code")
+        otp = attrs.get("otp")
 
         try:
             user = User.objects.get(profile_code=profile_code)
         except User.DoesNotExist:
-            raise serializers.ValidationError({"profile_code": "User with this profile code does not exist."})
+            raise serializers.ValidationError(
+                {"profile_code": "User with this profile code does not exist."}
+            )
 
         if not user.is_verified:
             raise serializers.ValidationError({"profile_code": "User email is not verified yet."})
@@ -233,7 +265,9 @@ class ResetPasswordSerializer(serializers.Serializer):
         email = user.email
 
         try:
-            otp_record = EmailOTP.objects.get(email=email, otp=otp, purpose=OtpPurpose.PASSWORD_RESET)
+            otp_record = EmailOTP.objects.get(
+                email=email, otp=otp, purpose=OtpPurpose.PASSWORD_RESET
+            )
         except EmailOTP.DoesNotExist:
             raise serializers.ValidationError("Invalid OTP or profile code.")
 
@@ -241,31 +275,35 @@ class ResetPasswordSerializer(serializers.Serializer):
             otp_record.delete()
             raise serializers.ValidationError("This OTP has expired. Please request a new one.")
 
-        attrs['user'] = user
-        attrs['otp_record'] = otp_record
+        attrs["user"] = user
+        attrs["otp_record"] = otp_record
         return attrs
 
 
 class ForgotPinSerializer(serializers.Serializer):
     """Serializer for requesting a PIN reset OTP."""
+
     profile_code = serializers.CharField()
 
     def validate(self, attrs):
-        profile_code = attrs.get('profile_code')
+        profile_code = attrs.get("profile_code")
         try:
             user = User.objects.get(profile_code=profile_code)
         except User.DoesNotExist:
-            raise serializers.ValidationError({"profile_code": "User with this profile code does not exist."})
+            raise serializers.ValidationError(
+                {"profile_code": "User with this profile code does not exist."}
+            )
 
         if not user.is_verified:
             raise serializers.ValidationError({"profile_code": "User email is not verified yet."})
 
-        attrs['user'] = user
+        attrs["user"] = user
         return attrs
 
 
 class ResetPinSerializer(serializers.Serializer):
     """Serializer for resetting PIN with an OTP."""
+
     profile_code = serializers.CharField()
     otp = serializers.CharField(min_length=6, max_length=6)
     new_pin = serializers.CharField(write_only=True, min_length=6, max_length=6)
@@ -276,13 +314,15 @@ class ResetPinSerializer(serializers.Serializer):
         return value
 
     def validate(self, attrs):
-        profile_code = attrs.get('profile_code')
-        otp = attrs.get('otp')
+        profile_code = attrs.get("profile_code")
+        otp = attrs.get("otp")
 
         try:
             user = User.objects.get(profile_code=profile_code)
         except User.DoesNotExist:
-            raise serializers.ValidationError({"profile_code": "User with this profile code does not exist."})
+            raise serializers.ValidationError(
+                {"profile_code": "User with this profile code does not exist."}
+            )
 
         if not user.is_verified:
             raise serializers.ValidationError({"profile_code": "User email is not verified yet."})
@@ -298,31 +338,38 @@ class ResetPinSerializer(serializers.Serializer):
             otp_record.delete()
             raise serializers.ValidationError("This OTP has expired. Please request a new one.")
 
-        attrs['user'] = user
-        attrs['otp_record'] = otp_record
+        attrs["user"] = user
+        attrs["otp_record"] = otp_record
         return attrs
 
 
 class SuperAdminUserCreateSerializer(serializers.ModelSerializer):
     """Serializer used by Super Admin to directly create a verified and active user."""
+
     password = serializers.CharField(write_only=True, min_length=8)
     pin = serializers.CharField(write_only=True, min_length=6, max_length=6)
 
     class Meta:
         model = User
         fields = [
-            'profile_code',
-            'first_name', 'middle_name', 'last_name',
-            'email', 'mobile', 'profile_image',
-            'password', 'pin', 'role'
+            "profile_code",
+            "first_name",
+            "middle_name",
+            "last_name",
+            "email",
+            "mobile",
+            "profile_image",
+            "password",
+            "pin",
+            "role",
         ]
-        read_only_fields = ['profile_code']
+        read_only_fields = ["profile_code"]
         extra_kwargs = {
-            'middle_name': {'required': False},
-            'last_name': {'required': False},
-            'mobile': {'required': False},
-            'profile_image': {'required': False},
-            'role': {'required': False},
+            "middle_name": {"required": False},
+            "last_name": {"required": False},
+            "mobile": {"required": False},
+            "profile_image": {"required": False},
+            "role": {"required": False},
         }
 
     def validate_email(self, value):
@@ -341,13 +388,13 @@ class SuperAdminUserCreateSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
-        pin = validated_data.pop('pin')
-        
+        password = validated_data.pop("password")
+        pin = validated_data.pop("pin")
+
         user = User(**validated_data)
         user.set_password(password)
         user.set_pin(pin)
-        
+
         # Super Admin created users are immediately verified and active
         user.is_verified = True
         user.is_active = True
@@ -357,19 +404,17 @@ class SuperAdminUserCreateSerializer(serializers.ModelSerializer):
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     """Serializer for updating user profile fields."""
+
     class Meta:
         model = User
-        fields = [
-            'first_name', 'middle_name', 'last_name',
-            'mobile', 'profile_image', 'role'
-        ]
+        fields = ["first_name", "middle_name", "last_name", "mobile", "profile_image", "role"]
         extra_kwargs = {
-            'first_name': {'required': False},
-            'middle_name': {'required': False},
-            'last_name': {'required': False},
-            'mobile': {'required': False},
-            'profile_image': {'required': False},
-            'role': {'required': False},
+            "first_name": {"required": False},
+            "middle_name": {"required": False},
+            "last_name": {"required": False},
+            "mobile": {"required": False},
+            "profile_image": {"required": False},
+            "role": {"required": False},
         }
 
     def validate_mobile(self, value):
@@ -384,9 +429,12 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, attrs):
-        request = self.context.get('request')
+        request = self.context.get("request")
         if request and request.user:
-            # If the user is not a SUPER_ADMIN and they are attempting to change their role, block it
-            if 'role' in attrs and request.user.role != RoleChoices.SUPER_ADMIN:
-                raise serializers.ValidationError({"role": "You do not have permission to modify user roles."})
+            # If the user is not a SUPER_ADMIN and they are attempting
+            # to change their role, block it
+            if "role" in attrs and request.user.role != RoleChoices.SUPER_ADMIN:
+                raise serializers.ValidationError(
+                    {"role": "You do not have permission to modify user roles."}
+                )
         return attrs

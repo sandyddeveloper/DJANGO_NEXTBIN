@@ -60,6 +60,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     pin_masked = models.CharField(max_length=255, blank=True, null=True)
 
     role = models.CharField(max_length=20, choices=RoleChoices.choices, default=RoleChoices.USER)
+    assigned_role = models.ForeignKey(
+        "custom_admin.Role",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="users",
+    )
 
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)

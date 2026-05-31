@@ -1,10 +1,8 @@
-"""
-pytest configuration and fixtures.
-"""
-
 import pytest
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
+
+User = get_user_model()
 
 
 @pytest.fixture
@@ -17,9 +15,9 @@ def api_client():
 def user(db):
     """Return a test user."""
     return User.objects.create_user(
-        username='testuser',
         email='test@example.com',
-        password='testpass123'
+        password='testpass123',
+        first_name='Test'
     )
 
 
@@ -27,9 +25,9 @@ def user(db):
 def admin_user(db):
     """Return a test admin user."""
     return User.objects.create_superuser(
-        username='admin',
         email='admin@example.com',
-        password='admin123'
+        password='admin123',
+        first_name='Admin'
     )
 
 

@@ -43,6 +43,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     'apps.core.apps.CoreConfig',
     'apps.authentication.apps.AuthConfig',
+    'apps.admin.apps.AdminConfig',
 ]
 
 AUTH_USER_MODEL = 'authentication.CustomUser'
