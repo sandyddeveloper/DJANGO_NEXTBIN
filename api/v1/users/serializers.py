@@ -196,46 +196,50 @@ class ResendOTPSerializer(serializers.Serializer):
 
 class ForgotPasswordSerializer(serializers.Serializer):
     """Serializer for requesting a password reset OTP."""
-    email = serializers.EmailField()
+    profile_code = serializers.CharField()
 
-    def validate_email(self, value):
+    def validate(self, attrs):
+        profile_code = attrs.get('profile_code')
         try:
-            user = User.objects.get(email_hashed=hash_value(value))
+            user = User.objects.get(profile_code=profile_code)
         except User.DoesNotExist:
-            raise serializers.ValidationError("User with this email does not exist.")
+            raise serializers.ValidationError({"profile_code": "User with this profile code does not exist."})
 
         if not user.is_verified:
-            raise serializers.ValidationError("User email is not verified yet.")
+            raise serializers.ValidationError({"profile_code": "User email is not verified yet."})
 
-        return value
+        attrs['user'] = user
+        return attrs
 
 
 class ResetPasswordSerializer(serializers.Serializer):
     """Serializer for resetting password with an OTP."""
-    email = serializers.EmailField()
+    profile_code = serializers.CharField()
     otp = serializers.CharField(min_length=6, max_length=6)
     new_password = serializers.CharField(write_only=True, min_length=8)
 
     def validate(self, attrs):
-        email = attrs.get('email')
+        profile_code = attrs.get('profile_code')
         otp = attrs.get('otp')
+
+        try:
+            user = User.objects.get(profile_code=profile_code)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"profile_code": "User with this profile code does not exist."})
+
+        if not user.is_verified:
+            raise serializers.ValidationError({"profile_code": "User email is not verified yet."})
+
+        email = user.email
 
         try:
             otp_record = EmailOTP.objects.get(email=email, otp=otp, purpose=OtpPurpose.PASSWORD_RESET)
         except EmailOTP.DoesNotExist:
-            raise serializers.ValidationError("Invalid OTP or email address.")
+            raise serializers.ValidationError("Invalid OTP or profile code.")
 
         if otp_record.is_expired():
             otp_record.delete()
             raise serializers.ValidationError("This OTP has expired. Please request a new one.")
-
-        try:
-            user = User.objects.get(email_hashed=hash_value(email))
-        except User.DoesNotExist:
-            raise serializers.ValidationError("User matching this email does not exist.")
-
-        if not user.is_verified:
-            raise serializers.ValidationError("User email is not verified yet.")
 
         attrs['user'] = user
         attrs['otp_record'] = otp_record
@@ -244,23 +248,25 @@ class ResetPasswordSerializer(serializers.Serializer):
 
 class ForgotPinSerializer(serializers.Serializer):
     """Serializer for requesting a PIN reset OTP."""
-    email = serializers.EmailField()
+    profile_code = serializers.CharField()
 
-    def validate_email(self, value):
+    def validate(self, attrs):
+        profile_code = attrs.get('profile_code')
         try:
-            user = User.objects.get(email_hashed=hash_value(value))
+            user = User.objects.get(profile_code=profile_code)
         except User.DoesNotExist:
-            raise serializers.ValidationError("User with this email does not exist.")
+            raise serializers.ValidationError({"profile_code": "User with this profile code does not exist."})
 
         if not user.is_verified:
-            raise serializers.ValidationError("User email is not verified yet.")
+            raise serializers.ValidationError({"profile_code": "User email is not verified yet."})
 
-        return value
+        attrs['user'] = user
+        return attrs
 
 
 class ResetPinSerializer(serializers.Serializer):
     """Serializer for resetting PIN with an OTP."""
-    email = serializers.EmailField()
+    profile_code = serializers.CharField()
     otp = serializers.CharField(min_length=6, max_length=6)
     new_pin = serializers.CharField(write_only=True, min_length=6, max_length=6)
 
@@ -270,25 +276,27 @@ class ResetPinSerializer(serializers.Serializer):
         return value
 
     def validate(self, attrs):
-        email = attrs.get('email')
+        profile_code = attrs.get('profile_code')
         otp = attrs.get('otp')
+
+        try:
+            user = User.objects.get(profile_code=profile_code)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"profile_code": "User with this profile code does not exist."})
+
+        if not user.is_verified:
+            raise serializers.ValidationError({"profile_code": "User email is not verified yet."})
+
+        email = user.email
 
         try:
             otp_record = EmailOTP.objects.get(email=email, otp=otp, purpose=OtpPurpose.PIN_RESET)
         except EmailOTP.DoesNotExist:
-            raise serializers.ValidationError("Invalid OTP or email address.")
+            raise serializers.ValidationError("Invalid OTP or profile code.")
 
         if otp_record.is_expired():
             otp_record.delete()
             raise serializers.ValidationError("This OTP has expired. Please request a new one.")
-
-        try:
-            user = User.objects.get(email_hashed=hash_value(email))
-        except User.DoesNotExist:
-            raise serializers.ValidationError("User matching this email does not exist.")
-
-        if not user.is_verified:
-            raise serializers.ValidationError("User email is not verified yet.")
 
         attrs['user'] = user
         attrs['otp_record'] = otp_record

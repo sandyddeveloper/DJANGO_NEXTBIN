@@ -326,7 +326,8 @@ class ForgotPasswordView(APIView):
     def post(self, request):
         serializer = ForgotPasswordSerializer(data=request.data)
         if serializer.is_valid():
-            email = serializer.validated_data['email']
+            user = serializer.validated_data['user']
+            email = user.email
             
             # Generate OTP
             otp_code = generate_otp()
@@ -419,7 +420,8 @@ class ForgotPinView(APIView):
     def post(self, request):
         serializer = ForgotPinSerializer(data=request.data)
         if serializer.is_valid():
-            email = serializer.validated_data['email']
+            user = serializer.validated_data['user']
+            email = user.email
             
             # Generate OTP
             otp_code = generate_otp()
