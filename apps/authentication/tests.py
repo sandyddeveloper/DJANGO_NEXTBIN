@@ -34,7 +34,9 @@ def verified_user(db):
 @pytest.mark.django_db
 def test_forgot_password_success(api_client, verified_user):
     url = reverse("v1:forgot-password")
-    response = api_client.post(url, {"profile_code": verified_user.profile_code}, format="json")
+    response = api_client.post(
+        url, {"profile_code": verified_user.profile_code}, format="json", secure=True
+    )
 
     assert response.status_code == status.HTTP_200_OK
     assert "Password reset OTP sent" in response.data["message"]
@@ -48,7 +50,7 @@ def test_forgot_password_success(api_client, verified_user):
 @pytest.mark.django_db
 def test_forgot_password_invalid_profile_code(api_client):
     url = reverse("v1:forgot-password")
-    response = api_client.post(url, {"profile_code": "NBU99999"}, format="json")
+    response = api_client.post(url, {"profile_code": "NBU99999"}, format="json", secure=True)
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "profile_code" in response.data
@@ -58,7 +60,9 @@ def test_forgot_password_invalid_profile_code(api_client):
 def test_reset_password_success(api_client, verified_user):
     # First request forgot password to generate OTP
     url_forgot = reverse("v1:forgot-password")
-    api_client.post(url_forgot, {"profile_code": verified_user.profile_code}, format="json")
+    api_client.post(
+        url_forgot, {"profile_code": verified_user.profile_code}, format="json", secure=True
+    )
 
     otp_record = EmailOTP.objects.get(email=verified_user.email, purpose=OtpPurpose.PASSWORD_RESET)
 
@@ -72,6 +76,7 @@ def test_reset_password_success(api_client, verified_user):
             "new_password": "newpassword123",
         },
         format="json",
+        secure=True,
     )
 
     assert response.status_code == status.HTTP_200_OK
@@ -98,6 +103,7 @@ def test_reset_password_invalid_otp(api_client, verified_user):
             "new_password": "newpassword123",
         },
         format="json",
+        secure=True,
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -106,7 +112,9 @@ def test_reset_password_invalid_otp(api_client, verified_user):
 @pytest.mark.django_db
 def test_forgot_pin_success(api_client, verified_user):
     url = reverse("v1:forgot-pin")
-    response = api_client.post(url, {"profile_code": verified_user.profile_code}, format="json")
+    response = api_client.post(
+        url, {"profile_code": verified_user.profile_code}, format="json", secure=True
+    )
 
     assert response.status_code == status.HTTP_200_OK
     assert "PIN reset OTP sent" in response.data["message"]
@@ -120,7 +128,9 @@ def test_forgot_pin_success(api_client, verified_user):
 def test_reset_pin_success(api_client, verified_user):
     # First request forgot PIN to generate OTP
     url_forgot = reverse("v1:forgot-pin")
-    api_client.post(url_forgot, {"profile_code": verified_user.profile_code}, format="json")
+    api_client.post(
+        url_forgot, {"profile_code": verified_user.profile_code}, format="json", secure=True
+    )
 
     otp_record = EmailOTP.objects.get(email=verified_user.email, purpose=OtpPurpose.PIN_RESET)
 
@@ -130,6 +140,7 @@ def test_reset_pin_success(api_client, verified_user):
         url_reset,
         {"profile_code": verified_user.profile_code, "otp": otp_record.otp, "new_pin": "222222"},
         format="json",
+        secure=True,
     )
 
     assert response.status_code == status.HTTP_200_OK
