@@ -3,6 +3,8 @@ Django settings for Nextbin project.
 Production-ready configuration with environment-based settings.
 """
 
+import os
+import sys
 from pathlib import Path
 
 from decouple import Csv, config
@@ -144,6 +146,14 @@ if ENVIRONMENT == "production":
     ALLOWED_HOSTS = ["*"]
     STATIC_ROOT = "/data/data/com.termux/files/home/server/static"
     MEDIA_ROOT = "/data/data/com.termux/files/home/server/media"
+
+    # Ensure production/Termux directories exist to prevent WhiteNoise warnings and DB issues
+    for path in [STATIC_ROOT, MEDIA_ROOT, "/data/data/com.termux/files/home/server"]:
+        try:
+            os.makedirs(path, exist_ok=True)
+        except Exception:
+            pass
+
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -299,14 +309,18 @@ LOGGING = {
 
 # Security Settings for Production
 if not DEBUG:
-    SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=True, cast=bool)
-    SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=True, cast=bool)
-    CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=True, cast=bool)
+    # Disable SSL redirect, HTTPS cookies, and HSTS automatically when running the
+    # development server, to avoid HTTPS warnings and browser lockout.
+    is_runserver = "runserver" in sys.argv
+
+    SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=not is_runserver, cast=bool)
+    SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=not is_runserver, cast=bool)
+    CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=not is_runserver, cast=bool)
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_SECURITY_POLICY = {
         "default-src": ("'self'",),
     }
-    SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=31536000, cast=int)
+    SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=0 if is_runserver else 31536000, cast=int)
     SECURE_HSTS_INCLUDE_SUBDOMAINS = config(
         "SECURE_HSTS_INCLUDE_SUBDOMAINS", default=True, cast=bool
     )
