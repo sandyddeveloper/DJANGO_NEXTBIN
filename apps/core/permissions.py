@@ -11,6 +11,7 @@ Role Hierarchy:  SUPER_ADMIN > ADMIN > [Dynamic Groups] > USER
 """
 
 import inspect
+import logging
 import sys
 
 from django.contrib.auth.models import Group
@@ -19,6 +20,31 @@ from django.db import models
 from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 from rest_framework import permissions
+
+logger = logging.getLogger(__name__)
+
+
+def _safe_cache_get(key, default=None):
+    try:
+        return cache.get(key, default)
+    except Exception as e:
+        logger.warning(f"Cache get failed for key '{key}': {e}")
+        return default
+
+
+def _safe_cache_set(key, value, timeout=None):
+    try:
+        cache.set(key, value, timeout=timeout)
+    except Exception as e:
+        logger.warning(f"Cache set failed for key '{key}': {e}")
+
+
+def _safe_cache_delete(key):
+    try:
+        cache.delete(key)
+    except Exception as e:
+        logger.warning(f"Cache delete failed for key '{key}': {e}")
+
 
 # ---------------------------------------------------------------------------
 # Cache timeout constants (seconds)
@@ -94,7 +120,7 @@ class HasActivePermission(permissions.BasePermission):
             return False
 
         cache_key = f"role_perms_{assigned_role.name.replace(' ', '_').upper()}"
-        role_perms = cache.get(cache_key)
+        role_perms = _safe_cache_get(cache_key)
 
         if role_perms is None:
             # Fallback to DB
@@ -103,7 +129,7 @@ class HasActivePermission(permissions.BasePermission):
                 role_perms = set(group.permissions.values_list("codename", flat=True))
             except Group.DoesNotExist:
                 role_perms = set()
-            cache.set(cache_key, role_perms, timeout=CACHE_TIMEOUT_HIGH)
+            _safe_cache_set(cache_key, role_perms, timeout=CACHE_TIMEOUT_HIGH)
 
         return self.required_permission in role_perms
 
@@ -156,7 +182,7 @@ class ScreenRegistry:
             return set()
 
         cache_key = f"role_perms_{role_upper}"
-        role_perms = cache.get(cache_key)
+        role_perms = _safe_cache_get(cache_key)
 
         if role_perms is None:
             group = (
@@ -164,7 +190,7 @@ class ScreenRegistry:
             )
             if group:
                 role_perms = set(group.permissions.values_list("codename", flat=True))
-                cache.set(cache_key, role_perms, timeout=CACHE_TIMEOUT_HIGH)
+                _safe_cache_set(cache_key, role_perms, timeout=CACHE_TIMEOUT_HIGH)
             else:
                 role_perms = set()
 
@@ -271,14 +297,14 @@ for _name, _obj in inspect.getmembers(sys.modules[__name__]):
 def invalidate_group_perms_cache_on_save(sender, instance, **kwargs):
     """Invalidate cache when a Group (role) is renamed or updated."""
     cache_key = f"role_perms_{instance.name.replace(' ', '_').upper()}"
-    cache.delete(cache_key)
+    _safe_cache_delete(cache_key)
 
 
 @receiver(post_delete, sender=Group)
 def invalidate_group_perms_cache_on_delete(sender, instance, **kwargs):
     """Invalidate cache when a Group (role) is deleted."""
     cache_key = f"role_perms_{instance.name.replace(' ', '_').upper()}"
-    cache.delete(cache_key)
+    _safe_cache_delete(cache_key)
 
 
 @receiver(m2m_changed, sender=Group.permissions.through)
@@ -286,4 +312,4 @@ def invalidate_group_perms_cache_on_m2m_change(sender, instance, action, **kwarg
     """Invalidate cache when permissions are added/removed/cleared from a Group."""
     if action in ("post_add", "post_remove", "post_clear"):
         cache_key = f"role_perms_{instance.name.replace(' ', '_').upper()}"
-        cache.delete(cache_key)
+        _safe_cache_delete(cache_key)
