@@ -43,7 +43,7 @@ class Command(BaseCommand):
                     perm.name = str(label)
                     perm.save(update_fields=["name"])
 
-        self.stdout.write(self.style.SUCCESS(f"  ✔ Synced {len(all_codenames)} permissions."))
+        self.stdout.write(self.style.SUCCESS(f"  [OK] Synced {len(all_codenames)} permissions."))
 
         # ------------------------------------------------------------------
         # 2. Create Groups for each CoreSystemRoles
@@ -52,7 +52,9 @@ class Command(BaseCommand):
             Group.objects.get_or_create(name=role.value)
 
         self.stdout.write(
-            self.style.SUCCESS(f"  ✔ Ensured {len(CoreSystemRoles.choices)} system groups exist.")
+            self.style.SUCCESS(
+                f"  [OK] Ensured {len(CoreSystemRoles.choices)} system groups exist."
+            )
         )
 
         # ------------------------------------------------------------------
@@ -64,14 +66,14 @@ class Command(BaseCommand):
             super_admin_group.permissions.set(all_perms)
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"  ✔ Assigned {all_perms.count()} permissions to "
+                    f"  [OK] Assigned {all_perms.count()} permissions to "
                     f"'{CoreSystemRoles.SUPER_ADMIN.value}' group."
                 )
             )
         except Group.DoesNotExist:
             self.stderr.write(
                 self.style.ERROR(
-                    "  ✗ SUPER_ADMIN group not found — skipping permission assignment."
+                    "  [ERROR] SUPER_ADMIN group not found - skipping permission assignment."
                 )
             )
 
@@ -83,13 +85,15 @@ class Command(BaseCommand):
             admin_group.permissions.set(all_perms)
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"  ✔ Assigned {all_perms.count()} permissions to "
+                    f"  [OK] Assigned {all_perms.count()} permissions to "
                     f"'{CoreSystemRoles.ADMIN.value}' group."
                 )
             )
         except Group.DoesNotExist:
             self.stderr.write(
-                self.style.ERROR("  ✗ ADMIN group not found — skipping permission assignment.")
+                self.style.ERROR(
+                    "  [ERROR] ADMIN group not found - skipping permission assignment."
+                )
             )
 
         self.stdout.write(self.style.SUCCESS("Permission sync complete."))
