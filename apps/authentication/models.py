@@ -61,7 +61,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     role = models.CharField(max_length=20, choices=RoleChoices.choices, default=RoleChoices.USER)
     assigned_role = models.ForeignKey(
-        "custom_admin.Role",
+        "auth.Group",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -106,7 +106,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
             self.pin_masked = None
 
         if not self.profile_code:
-            prefix = "NBS" if self.role == RoleChoices.SUPER_ADMIN else "NBU"
+            if self.role == RoleChoices.SUPER_ADMIN:
+                prefix = "NBS"
+            elif self.role == RoleChoices.ADMIN:
+                prefix = "NBA"
+            else:
+                prefix = "NBU"
             last_user = (
                 CustomUser.objects.filter(profile_code__startswith=prefix)
                 .order_by("-profile_code")
