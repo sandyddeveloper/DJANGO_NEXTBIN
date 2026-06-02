@@ -57,7 +57,9 @@ class Command(BaseCommand):
             Group.objects.get_or_create(name=role.value)
 
         self.stdout.write(
-            self.style.SUCCESS(f"  ✔ Ensured {len(CoreSystemRoles.choices)} system groups exist.")
+            self.style.SUCCESS(
+                f"  ✔ Ensured {len(CoreSystemRoles.choices)} system groups exist."
+            )
         )
 
         # ------------------------------------------------------------------
@@ -69,12 +71,15 @@ class Command(BaseCommand):
             super_admin_group.permissions.set(all_perms)
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"  ✔ Assigned {all_perms.count()} permissions to '{CoreSystemRoles.SUPER_ADMIN.value}' group."
+                    f"  ✔ Assigned {all_perms.count()} permissions to "
+                    f"'{CoreSystemRoles.SUPER_ADMIN.value}' group."
                 )
             )
         except Group.DoesNotExist:
             self.stderr.write(
-                self.style.ERROR("  ✗ SUPER_ADMIN group not found — skipping permission assignment.")
+                self.style.ERROR(
+                    "  ✗ SUPER_ADMIN group not found — skipping permission assignment."
+                )
             )
 
         # ------------------------------------------------------------------
@@ -85,7 +90,8 @@ class Command(BaseCommand):
             admin_group.permissions.set(all_perms)
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"  ✔ Assigned {all_perms.count()} permissions to '{CoreSystemRoles.ADMIN.value}' group."
+                    f"  ✔ Assigned {all_perms.count()} permissions to "
+                    f"'{CoreSystemRoles.ADMIN.value}' group."
                 )
             )
         except Group.DoesNotExist:

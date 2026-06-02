@@ -181,13 +181,23 @@ class ScreenRegistry:
         user_screens = {}
         for screen_key, config in matrix["screens"].items():
             req_perm = config.get("permission")
-            has_screen_access = is_super or is_admin or (req_perm is None) or (req_perm in role_perms)
+            has_screen_access = (
+                is_super
+                or is_admin
+                or (req_perm is None)
+                or (req_perm in role_perms)
+            )
 
             components_data = {}
             has_any_available = False
 
             for comp_key, req_comp_perm in config.get("components", {}).items():
-                has_comp = is_super or is_admin or (req_comp_perm is None) or (req_comp_perm in role_perms)
+                has_comp = (
+                    is_super
+                    or is_admin
+                    or (req_comp_perm is None)
+                    or (req_comp_perm in role_perms)
+                )
                 components_data[comp_key] = {"is_available": has_comp}
                 if has_comp:
                     has_any_available = True
