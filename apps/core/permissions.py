@@ -20,7 +20,6 @@ from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 from rest_framework import permissions
 
-
 # ---------------------------------------------------------------------------
 # Cache timeout constants (seconds)
 # ---------------------------------------------------------------------------
