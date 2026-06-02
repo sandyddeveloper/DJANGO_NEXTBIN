@@ -46,9 +46,7 @@ class Command(BaseCommand):
                     perm.name = str(label)
                     perm.save(update_fields=["name"])
 
-        self.stdout.write(
-            self.style.SUCCESS(f"  ✔ Synced {len(all_codenames)} permissions.")
-        )
+        self.stdout.write(self.style.SUCCESS(f"  ✔ Synced {len(all_codenames)} permissions."))
 
         # ------------------------------------------------------------------
         # 2. Create Groups for each CoreSystemRoles
@@ -57,9 +55,7 @@ class Command(BaseCommand):
             Group.objects.get_or_create(name=role.value)
 
         self.stdout.write(
-            self.style.SUCCESS(
-                f"  ✔ Ensured {len(CoreSystemRoles.choices)} system groups exist."
-            )
+            self.style.SUCCESS(f"  ✔ Ensured {len(CoreSystemRoles.choices)} system groups exist.")
         )
 
         # ------------------------------------------------------------------

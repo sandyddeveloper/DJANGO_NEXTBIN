@@ -31,11 +31,13 @@ CACHE_TIMEOUT_HIGH = 3600  # 1 hour
 # Core System Roles
 # ===========================================================================
 
+
 class CoreSystemRoles(models.TextChoices):
     """
     Static base roles stored on CustomUser.role.
     Dynamic Groups (with granular permissions) sit between ADMIN and USER.
     """
+
     SUPER_ADMIN = "SUPER_ADMIN", "Super Admin"
     ADMIN = "ADMIN", "Admin"
     USER = "USER", "User"
@@ -44,6 +46,7 @@ class CoreSystemRoles(models.TextChoices):
 # ===========================================================================
 # HasActivePermission — the primary view guard
 # ===========================================================================
+
 
 class HasActivePermission(permissions.BasePermission):
     """
@@ -110,6 +113,7 @@ class HasActivePermission(permissions.BasePermission):
 # ScreenRegistry — dynamic permissions matrix for frontend
 # ===========================================================================
 
+
 class ScreenRegistry:
     """
     Dynamically builds a permissions matrix by scanning all ``*Perms``
@@ -157,9 +161,7 @@ class ScreenRegistry:
 
         if role_perms is None:
             group = (
-                Group.objects.prefetch_related("permissions")
-                .filter(name__iexact=role_name)
-                .first()
+                Group.objects.prefetch_related("permissions").filter(name__iexact=role_name).first()
             )
             if group:
                 role_perms = set(group.permissions.values_list("codename", flat=True))
@@ -182,10 +184,7 @@ class ScreenRegistry:
         for screen_key, config in matrix["screens"].items():
             req_perm = config.get("permission")
             has_screen_access = (
-                is_super
-                or is_admin
-                or (req_perm is None)
-                or (req_perm in role_perms)
+                is_super or is_admin or (req_perm is None) or (req_perm in role_perms)
             )
 
             components_data = {}
@@ -193,10 +192,7 @@ class ScreenRegistry:
 
             for comp_key, req_comp_perm in config.get("components", {}).items():
                 has_comp = (
-                    is_super
-                    or is_admin
-                    or (req_comp_perm is None)
-                    or (req_comp_perm in role_perms)
+                    is_super or is_admin or (req_comp_perm is None) or (req_comp_perm in role_perms)
                 )
                 components_data[comp_key] = {"is_available": has_comp}
                 if has_comp:
@@ -262,11 +258,7 @@ ALL_CUSTOM_PERMS_CODENAMES: set = set()
 ALL_PERMISSION_CLASSES: list = []
 
 for _name, _obj in inspect.getmembers(sys.modules[__name__]):
-    if (
-        inspect.isclass(_obj)
-        and issubclass(_obj, models.TextChoices)
-        and _name.endswith("Perms")
-    ):
+    if inspect.isclass(_obj) and issubclass(_obj, models.TextChoices) and _name.endswith("Perms"):
         ALL_CUSTOM_PERMS_CODENAMES.update(_obj.values)
         ALL_PERMISSION_CLASSES.append(_obj)
 
@@ -274,6 +266,7 @@ for _name, _obj in inspect.getmembers(sys.modules[__name__]):
 # ===========================================================================
 # Cache Invalidation Signals
 # ===========================================================================
+
 
 @receiver(post_save, sender=Group)
 def invalidate_group_perms_cache_on_save(sender, instance, **kwargs):
