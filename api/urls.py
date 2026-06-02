@@ -72,7 +72,6 @@ urlpatterns = [
     path("admin/roles/<int:pk>/assign-permissions/", RolePermissionsView.as_view(action="assign"), name="admin-role-assign-permissions"),
     path("admin/roles/<int:pk>/remove-permissions/", RolePermissionsView.as_view(action="remove"), name="admin-role-remove-permissions"),
     path("admin/staff/", StaffListView.as_view(), name="admin-staff-list"),
-    path("admin/staff/<str:pk>/", StaffDetailView.as_view(), name="admin-staff-detail"),
-    path("admin/staff/<str:pk>/assign-role/", StaffAssignRoleView.as_view(), name="admin-staff-assign-role"),
-    path("admin/staff/<str:pk>/deactivate/", StaffDetailView.as_view(), name="admin-staff-deactivate"),
+    path("admin/staff/<str:profile_code>/", StaffDetailView.as_view(http_method_names=["get", "patch", "delete"]), name="admin-staff-detail"),
+    path("admin/staff/<str:profile_code>/assign-role/", StaffAssignRoleView.as_view(), name="admin-staff-assign-role"),
 ]

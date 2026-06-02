@@ -14,6 +14,7 @@ from apps.authentication.crypto_utils import hash_value
 from apps.authentication.models import EmailOTP
 from apps.authentication.utils import generate_otp, generate_tokens, send_otp_email
 from apps.constants.authConstant import OtpPurpose, RoleChoices
+from apps.core.permissions import CoreSystemRoles, HasActivePermission, UserPerms
 
 from .serializers import (
     ForgotPasswordSerializer,
@@ -461,12 +462,15 @@ class ResetPasswordOrPinView(APIView):
 
 class IsSuperAdminOrOwner(BasePermission):
     """
-    Custom permission to only allow Super Admins or the profile owner.
+    Custom permission to only allow Super Admins, Admins, or the profile owner.
     """
 
     def has_object_permission(self, request, view, obj):
         return (
-            request.user.role == RoleChoices.SUPER_ADMIN
+            request.user.role in (
+                CoreSystemRoles.SUPER_ADMIN,
+                CoreSystemRoles.ADMIN,
+            )
             or request.user.profile_code == obj.profile_code
         )
 
@@ -477,7 +481,7 @@ class UserProfileListView(APIView):
     * GET /api/v1/user/profiles/ - List all users (Super Admin only)
     * POST /api/v1/user/profiles/ - Direct create user (Super Admin only)
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasActivePermission(UserPerms.VIEW_USERS)]
     serializer_class = UserProfileSerializer
 
     @extend_schema(
@@ -487,8 +491,6 @@ class UserProfileListView(APIView):
         tags=["User Profile"]
     )
     def get(self, request, *args, **kwargs):
-        if request.user.role != RoleChoices.SUPER_ADMIN:
-            raise PermissionDenied("You do not have permission to view the list of users.")
         queryset = User.objects.all().order_by("profile_code")
         serializer = UserProfileSerializer(queryset, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -501,8 +503,6 @@ class UserProfileListView(APIView):
         tags=["User Profile"]
     )
     def post(self, request, *args, **kwargs):
-        if request.user.role != RoleChoices.SUPER_ADMIN:
-            raise PermissionDenied("You do not have permission to create users directly.")
         serializer = SuperAdminUserCreateSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             user = serializer.save()

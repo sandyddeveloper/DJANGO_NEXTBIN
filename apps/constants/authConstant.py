@@ -3,7 +3,7 @@ from django.db import models
 
 class RoleChoices(models.TextChoices):
     USER = "USER", "User"
-    STAFF = "STAFF", "Staff"
+    ADMIN = "ADMIN", "Admin"
     SUPER_ADMIN = "SUPER_ADMIN", "Super Admin"
 
 

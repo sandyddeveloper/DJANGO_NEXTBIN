@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 from rest_framework import serializers
-
-from apps.admin.models import Permission, Role
 
 User = get_user_model()
 
@@ -9,7 +8,8 @@ User = get_user_model()
 class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Permission
-        fields = ["id", "code", "name", "description"]
+        fields = ["id", "codename", "name"]
+        read_only_fields = fields
 
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -23,23 +23,19 @@ class RoleSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Role
+        model = Group
         fields = [
             "id",
             "name",
-            "description",
-            "is_active",
             "permissions_detail",
             "permission_ids",
-            "created_at",
-            "updated_at",
         ]
 
 
 class StaffCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     role_id = serializers.PrimaryKeyRelatedField(
-        queryset=Role.objects.filter(is_active=True),
+        queryset=Group.objects.all(),
         source="assigned_role",
         required=False,
         allow_null=True,
@@ -72,7 +68,7 @@ class StaffCreateSerializer(serializers.ModelSerializer):
 
 
 class RoleAssignSerializer(serializers.Serializer):
-    role_id = serializers.PrimaryKeyRelatedField(queryset=Role.objects.filter(is_active=True))
+    role_id = serializers.PrimaryKeyRelatedField(queryset=Group.objects.all())
 
 
 class StaffUserSerializer(serializers.ModelSerializer):

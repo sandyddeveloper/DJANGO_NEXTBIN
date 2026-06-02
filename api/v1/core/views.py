@@ -12,6 +12,8 @@ from rest_framework import serializers as drf_serializers
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
+
+from apps.core.permissions import HasActivePermission, LogPerms, SettingsPerms
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -93,7 +95,7 @@ class HealthCheckView(APIView):
 
 @extend_schema(tags=["Logs — API"])
 class APILogListView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasActivePermission(LogPerms.VIEW_API_LOGS)]
     serializer_class = APILogSerializer
 
     @extend_schema(
@@ -146,7 +148,7 @@ class APILogListView(APIView):
 
 @extend_schema(tags=["Logs — API"])
 class APILogDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasActivePermission(LogPerms.VIEW_API_LOGS)]
     serializer_class = APILogSerializer
 
     @extend_schema(
@@ -168,7 +170,7 @@ class APILogDetailView(APIView):
 
 @extend_schema(tags=["Logs — User Activity"])
 class UserActivityLogListView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasActivePermission(LogPerms.VIEW_ACTIVITY_LOGS)]
     serializer_class = UserActivityLogSerializer
 
     @extend_schema(
@@ -218,7 +220,7 @@ class UserActivityLogListView(APIView):
 
 @extend_schema(tags=["Logs — User Activity"])
 class UserActivityLogDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasActivePermission(LogPerms.VIEW_ACTIVITY_LOGS)]
     serializer_class = UserActivityLogSerializer
 
     @extend_schema(
@@ -240,7 +242,7 @@ class UserActivityLogDetailView(APIView):
 
 @extend_schema(tags=["Logs — System"])
 class SystemLogListView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasActivePermission(LogPerms.VIEW_SYSTEM_LOGS)]
     serializer_class = SystemLogSerializer
 
     @extend_schema(
@@ -289,7 +291,7 @@ class SystemLogListView(APIView):
 
 @extend_schema(tags=["Logs — System"])
 class SystemLogDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasActivePermission(LogPerms.VIEW_SYSTEM_LOGS)]
     serializer_class = SystemLogSerializer
 
     @extend_schema(
@@ -311,7 +313,7 @@ class SystemLogDetailView(APIView):
 
 @extend_schema(tags=["System Settings"])
 class SystemSettingsListView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasActivePermission(SettingsPerms.VIEW_SETTINGS)]
     serializer_class = SystemSettingsSerializer
 
     def get_queryset(self, request):
