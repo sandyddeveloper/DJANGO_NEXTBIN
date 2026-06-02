@@ -43,6 +43,7 @@ db.sqlite3-wal
 .env
 .env.local
 .env.*.local
+*.env
 
 # Testing
 .coverage
